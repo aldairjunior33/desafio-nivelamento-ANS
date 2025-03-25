@@ -6,18 +6,27 @@ url = 'https://www.gov.br/ans/pt-br/acesso-a-informacao/participacao-da-sociedad
 
 response = requests.get(url)
 
-# Usa o BeautifulSoup para analisar o HTML
 soup = BeautifulSoup(response.content, 'html.parser')
 
-pdf_links = []
-for link in soup.find_all('a', href=True):
-    if link['href'].endswith('.pdf'):
-        pdf_links.append(link['href'])
+# Lista de nomes dos anexos que queremos baixar
+anexos_nomes = [
+    "Anexo_I_Rol_2021RN_465.2021_RN627L.2024.pdf",
+    "Anexo_II_DUT_2021_RN_465.2021_RN628.2025_RN629.2025.pdf"
+]
 
-# Baixar os arquivos PDF
-for pdf_url in pdf_links:
-    file_name = pdf_url.split('/')[-1]
-    pdf_response = requests.get(pdf_url)
-    with open(file_name, 'wb') as f:
-        f.write(pdf_response.content)
-    print(f"Arquivo {file_name} baixado com sucesso!")
+# Pasta "Anexos"
+os.makedirs('anexos', exist_ok=True)
+
+for link in soup.find_all('a', href=True):
+    pdf_url = link['href']
+    
+    if pdf_url.endswith('.pdf') and any(nome_arquivo in pdf_url for nome_arquivo in anexos_nomes):
+        pdf_url = pdf_url if pdf_url.startswith('http') else f"https://www.gov.br{pdf_url}"
+        
+
+        file_name = pdf_url.split('/')[-1]
+        pdf_response = requests.get(pdf_url)
+        
+        with open(os.path.join('anexos', file_name), 'wb') as f:
+            f.write(pdf_response.content)
+        print(f"Arquivo {file_name} baixado com sucesso!")
